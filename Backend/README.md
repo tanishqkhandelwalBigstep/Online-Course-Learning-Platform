@@ -126,3 +126,7 @@ All errors go through a single centralized error handler.
 - Pagination and search on list endpoints are planned but not yet implemented.
 
 See `routes.txt` for the full list of available endpoints.
+
+
+## Swagger Documentation
+api-docs/#
