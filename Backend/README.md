@@ -110,6 +110,15 @@ Error:
 
 All errors go through a single centralized error handler.
 
+## Logging
+
+Logging is file-based via `src/utils/logger.js`:
+
+- `logs/app.log` — application logs (INFO / WARN), timestamped.
+- `logs/error.log` — error logs (ERROR), timestamped.
+
+In development the same lines are also mirrored to stdout. Logging is disabled under `NODE_ENV=test`. The `logs/` directory is created automatically and is gitignored.
+
 ## Authentication
 
 - JWT is returned on register/login and also set as an httpOnly cookie.
@@ -123,10 +132,25 @@ All errors go through a single centralized error handler.
   enrollment, progress tracking, quiz attempts with server-side scoring, reviews with rating
   aggregation, instructor dashboard and admin dashboard.
 - Seed data has three users (one per role).
+- Automated tests (unit + integration) are implemented and passing (see Testing below).
 - Pagination and search on list endpoints are planned but not yet implemented.
 
 See `routes.txt` for the full list of available endpoints.
 
+## Testing
+
+Automated tests use Jest, Supertest and an in-memory MongoDB (`mongodb-memory-server`), so no running database is required.
+
+```
+npm test              # run unit + integration tests
+npm run test:unit     # business-logic unit tests only
+npm run test:integration
+```
+
+- Unit tests cover the core business calculations: quiz scoring, pass thresholds, attempt limits, best score, and course progress percentage / auto-completion.
+- Integration tests cover every API endpoint: authentication, role-based authorization and request validation; the full learning workflow (course creation and publishing rules, enrollment, lesson completion, quiz attempts, progress, reviews and results); cascade deletes (lesson/quiz removing their questions, attempts and progress); the public catalog reads; and the instructor and admin dashboards. Edge cases such as malformed ids, not-found resources, duplicate constraints and out-of-range quiz answers are included.
+
+The in-memory server will reuse a local `mongod` binary if one is installed; otherwise it downloads one on first run.
 
 ## Swagger Documentation
 api-docs/#
