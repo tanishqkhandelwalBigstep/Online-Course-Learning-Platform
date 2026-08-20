@@ -47,6 +47,56 @@ const idParam = {
     description: 'MongoDB ObjectId'
 }
 
+const pageParam = {
+    name: 'page',
+    in: 'query',
+    required: false,
+    schema: { type: 'integer', minimum: 1, default: 1 },
+    description: 'Page number (default 1)'
+}
+
+const limitParam = {
+    name: 'limit',
+    in: 'query',
+    required: false,
+    schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+    description: 'Items per page (default 10, max 100)'
+}
+
+const searchParam = {
+    name: 'search',
+    in: 'query',
+    required: false,
+    schema: { type: 'string' },
+    description: 'Case-insensitive search term'
+}
+
+const categoryParam = {
+    name: 'category',
+    in: 'query',
+    required: false,
+    schema: { type: 'string' },
+    description: 'Filter by category id'
+}
+
+const statusParam = {
+    name: 'status',
+    in: 'query',
+    required: false,
+    schema: { type: 'string', enum: ['draft', 'published'] },
+    description: 'Filter by course status'
+}
+
+const roleParam = {
+    name: 'role',
+    in: 'query',
+    required: false,
+    schema: { type: 'string', enum: ['student', 'instructor', 'admin'] },
+    description: 'Filter by user role'
+}
+
+const paginationParams = [pageParam, limitParam]
+
 const openapiSpec = {
     openapi: '3.0.3',
     info: {
@@ -197,8 +247,9 @@ const openapiSpec = {
         '/api/v1/courses': {
             get: {
                 tags: ['Courses'],
-                summary: 'List published courses',
+                summary: 'List/search published courses (paginated)',
                 security: [],
+                parameters: [...paginationParams, searchParam, categoryParam],
                 responses: { 200: successResponse }
             },
             post: {
@@ -352,7 +403,8 @@ const openapiSpec = {
         '/api/v1/my-courses': {
             get: {
                 tags: ['Enrollment'],
-                summary: 'List the courses the student is enrolled in',
+                summary: 'List the courses the student is enrolled in (paginated)',
+                parameters: [...paginationParams],
                 responses: { 200: successResponse }
             }
         },
@@ -426,9 +478,9 @@ const openapiSpec = {
         '/api/v1/courses/{id}/reviews': {
             get: {
                 tags: ['Reviews'],
-                summary: 'List reviews for a course with average rating',
+                summary: 'List reviews for a course with average rating (paginated)',
                 security: [],
-                parameters: [idParam],
+                parameters: [idParam, ...paginationParams],
                 responses
             },
             post: {
@@ -463,7 +515,8 @@ const openapiSpec = {
         '/api/v1/instructor/courses': {
             get: {
                 tags: ['Instructor'],
-                summary: 'List the instructor own courses with counts',
+                summary: 'List the instructor own courses with counts (paginated)',
+                parameters: [...paginationParams],
                 responses: { 200: successResponse }
             }
         },
@@ -485,7 +538,8 @@ const openapiSpec = {
         '/api/v1/admin/users': {
             get: {
                 tags: ['Admin'],
-                summary: 'List all users (admin)',
+                summary: 'List users (admin, paginated, filter by role/search)',
+                parameters: [...paginationParams, searchParam, roleParam],
                 responses: { 200: successResponse }
             },
             post: {
@@ -514,7 +568,8 @@ const openapiSpec = {
         '/api/v1/admin/courses': {
             get: {
                 tags: ['Admin'],
-                summary: 'List all courses of any status (admin)',
+                summary: 'List courses of any status (admin, paginated, filter by status/search)',
+                parameters: [...paginationParams, searchParam, statusParam],
                 responses: { 200: successResponse }
             }
         }

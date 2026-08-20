@@ -1,6 +1,7 @@
 const reviewsRepository = require('./reviews.repository')
 const coursesRepository = require('../courses/courses.repository')
 const enrollmentsRepository = require('../enrollments/enrollments.repository')
+const { getPagination, buildMeta } = require('../../utils/pagination')
 const { NotFoundError, ForbiddenError, ConflictError } = require('../../utils/error')
 
 async function addReview(studentId, courseId, data){
@@ -28,19 +29,27 @@ async function addReview(studentId, courseId, data){
     return review
 }
 
-async function getCourseReviews(courseId){
+async function getCourseReviews(courseId, query){
     const course = await coursesRepository.findById(courseId)
     if (!course){
         throw new NotFoundError('Course not found')
     }
 
-    const reviews = await reviewsRepository.findByCourse(courseId)
-    const summary = await reviewsRepository.getRatingSummary(courseId)
+    const { page, limit, skip } = getPagination(query)
+
+    const [reviews, total, summary] = await Promise.all([
+        reviewsRepository.findByCoursePaged(courseId, skip, limit),
+        reviewsRepository.countByCourse(courseId),
+        reviewsRepository.getRatingSummary(courseId)
+    ])
 
     return {
-        averageRating: summary.averageRating,
-        totalReviews: summary.totalReviews,
-        reviews
+        data: {
+            averageRating: summary.averageRating,
+            totalReviews: summary.totalReviews,
+            reviews
+        },
+        pagination: buildMeta(total, page, limit)
     }
 }
 

@@ -13,6 +13,18 @@ function findByCourse(courseId){
     return Review.find({ courseId }).populate('studentId', 'name').sort('-createdAt')
 }
 
+function findByCoursePaged(courseId, skip, limit){
+    return Review.find({ courseId })
+        .populate('studentId', 'name')
+        .sort('-createdAt -_id')
+        .skip(skip)
+        .limit(limit)
+}
+
+function countByCourse(courseId){
+    return Review.countDocuments({ courseId })
+}
+
 async function getRatingSummary(courseId){
     const result = await Review.aggregate([
         { $match: { courseId: new mongoose.Types.ObjectId(courseId) } },
@@ -33,5 +45,7 @@ module.exports = {
     createReview,
     findByStudentAndCourse,
     findByCourse,
+    findByCoursePaged,
+    countByCourse,
     getRatingSummary
 }

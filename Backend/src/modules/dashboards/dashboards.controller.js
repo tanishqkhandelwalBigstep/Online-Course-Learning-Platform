@@ -8,8 +8,8 @@ const getInstructorOverview = asyncHandler(async (req, res) => {
 })
 
 const getInstructorCourses = asyncHandler(async (req, res) => {
-    const data = await dashboardsService.getInstructorCourses(req.user.id)
-    return sendSuccess(res, 200, 'Instructor courses fetched successfully', data)
+    const result = await dashboardsService.getInstructorCourses(req.user.id, req.query)
+    return sendSuccess(res, 200, 'Instructor courses fetched successfully', result.items, { pagination: result.pagination })
 })
 
 const getInstructorCourseDetail = asyncHandler(async (req, res) => {

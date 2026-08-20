@@ -4,6 +4,7 @@ const lessonsRepository = require('../lessons/lessons.repository')
 const quizzesRepository = require('../quizzes/quizzes.repository')
 const questionsRepository = require('../questions/questions.repository')
 const enrollmentsRepository = require('../enrollments/enrollments.repository')
+const { getPagination, buildMeta } = require('../../utils/pagination')
 const { NotFoundError, ForbiddenError } = require('../../utils/error')
 
 async function getInstructorOverview(instructorId){
@@ -30,24 +31,30 @@ async function getInstructorOverview(instructorId){
     }
 }
 
-async function getInstructorCourses(instructorId){
-    const courses = await coursesRepository.findByInstructor(instructorId)
+async function getInstructorCourses(instructorId, query){
+    const { page, limit, skip } = getPagination(query)
 
-    const result = []
+    const [courses, total] = await Promise.all([
+        coursesRepository.findByInstructorPaged(instructorId, skip, limit),
+        coursesRepository.countByInstructor(instructorId)
+    ])
+
+    const items = []
     for (const course of courses){
         const sections = await sectionsRepository.findByCourse(course._id)
         const sectionIds = sections.map((section) => section._id)
         const lessonCount = await lessonsRepository.countBySectionIds(sectionIds)
         const enrollmentCount = await enrollmentsRepository.countByCourse(course._id)
 
-        result.push({
+        items.push({
             course,
             sectionCount: sections.length,
             lessonCount,
             enrollmentCount
         })
     }
-    return result
+
+    return { items, pagination: buildMeta(total, page, limit) }
 }
 
 async function getInstructorCourseDetail(user, courseId){

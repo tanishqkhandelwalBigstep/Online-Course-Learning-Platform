@@ -8,8 +8,8 @@ const addReview = asyncHandler(async (req, res) => {
 })
 
 const getCourseReviews = asyncHandler(async (req, res) => {
-    const data = await reviewsService.getCourseReviews(req.params.id)
-    return sendSuccess(res, 200, 'Reviews fetched successfully', data)
+    const result = await reviewsService.getCourseReviews(req.params.id, req.query)
+    return sendSuccess(res, 200, 'Reviews fetched successfully', result.data, { pagination: result.pagination })
 })
 
 module.exports = {

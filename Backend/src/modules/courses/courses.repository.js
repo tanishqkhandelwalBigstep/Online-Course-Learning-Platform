@@ -1,4 +1,26 @@
 const Course = require('./courses.model')
+const { buildSearchRegex } = require('../../utils/pagination')
+
+function buildFilter({ search, status, instructorId, categoryId }){
+    const filter = {}
+    if (status){
+        filter.status = status
+    }
+    if (instructorId){
+        filter.instructorId = instructorId
+    }
+    if (categoryId){
+        filter.categoryId = categoryId
+    }
+    const regex = buildSearchRegex(search)
+    if (regex){
+        filter.$or = [
+            { title: regex },
+            { description: regex }
+        ]
+    }
+    return filter
+}
 
 function createCourse(data){
     return Course.create(data)
@@ -15,10 +37,35 @@ function findAllPublished(){
         .sort('-createdAt')
 }
 
+function findPaged(criteria, skip, limit){
+    return Course.find(buildFilter(criteria))
+        .populate('categoryId', 'name')
+        .populate('instructorId', 'name')
+        .sort('-createdAt -_id')
+        .skip(skip)
+        .limit(limit)
+}
+
+function countByFilter(criteria){
+    return Course.countDocuments(buildFilter(criteria))
+}
+
 function findByInstructor(instructorId){
     return Course.find({ instructorId })
         .populate('categoryId', 'name')
         .sort('-createdAt')
+}
+
+function findByInstructorPaged(instructorId, skip, limit){
+    return Course.find({ instructorId })
+        .populate('categoryId', 'name')
+        .sort('-createdAt -_id')
+        .skip(skip)
+        .limit(limit)
+}
+
+function countByInstructor(instructorId){
+    return Course.countDocuments({ instructorId })
 }
 
 function updateById(id, data){
@@ -44,7 +91,11 @@ module.exports = {
     createCourse,
     findById,
     findAllPublished,
+    findPaged,
+    countByFilter,
     findByInstructor,
+    findByInstructorPaged,
+    countByInstructor,
     updateById,
     findAllCourses,
     countAll,

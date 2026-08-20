@@ -8,8 +8,8 @@ const createCourse = asyncHandler(async (req, res) => {
 })
 
 const getAllCourses = asyncHandler(async (req, res) => {
-    const courses = await coursesService.getAllPublishedCourses()
-    return sendSuccess(res, 200, 'Courses fetched successfully', courses)
+    const result = await coursesService.getAllPublishedCourses(req.query)
+    return sendSuccess(res, 200, 'Courses fetched successfully', result.items, { pagination: result.pagination })
 })
 
 const getCourse = asyncHandler(async (req, res) => {

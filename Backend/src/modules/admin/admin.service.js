@@ -3,6 +3,7 @@ const coursesRepository = require('../courses/courses.repository')
 const enrollmentsRepository = require('../enrollments/enrollments.repository')
 const categoriesRepository = require('../categories/categories.repository')
 const { createPassword } = require('../../utils/hash')
+const { getPagination, buildMeta } = require('../../utils/pagination')
 const { ConflictError } = require('../../utils/error')
 
 async function createUser(data){
@@ -27,12 +28,34 @@ async function createUser(data){
     }
 }
 
-async function getAllUsers(){
-    return usersRepository.findAll()
+async function getAllUsers(query){
+    const { page, limit, skip } = getPagination(query)
+    const criteria = {
+        search: query && query.search,
+        role: query && query.role
+    }
+
+    const [items, total] = await Promise.all([
+        usersRepository.findPaged(criteria, skip, limit),
+        usersRepository.countByFilter(criteria)
+    ])
+
+    return { items, pagination: buildMeta(total, page, limit) }
 }
 
-async function getAllCourses(){
-    return coursesRepository.findAllCourses()
+async function getAllCourses(query){
+    const { page, limit, skip } = getPagination(query)
+    const criteria = {
+        search: query && query.search,
+        status: query && query.status
+    }
+
+    const [items, total] = await Promise.all([
+        coursesRepository.findPaged(criteria, skip, limit),
+        coursesRepository.countByFilter(criteria)
+    ])
+
+    return { items, pagination: buildMeta(total, page, limit) }
 }
 
 async function getOverview(){

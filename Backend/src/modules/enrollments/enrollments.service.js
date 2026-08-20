@@ -1,5 +1,6 @@
 const enrollmentsRepository = require('./enrollments.repository')
 const coursesRepository = require('../courses/courses.repository')
+const { getPagination, buildMeta } = require('../../utils/pagination')
 const { NotFoundError, BadRequestError, ConflictError } = require('../../utils/error')
 
 async function enroll(studentId, courseId){
@@ -25,8 +26,15 @@ async function enroll(studentId, courseId){
     return enrollment
 }
 
-async function getMyCourses(studentId){
-    return enrollmentsRepository.findByStudent(studentId)
+async function getMyCourses(studentId, query){
+    const { page, limit, skip } = getPagination(query)
+
+    const [items, total] = await Promise.all([
+        enrollmentsRepository.findByStudentPaged(studentId, skip, limit),
+        enrollmentsRepository.countByStudent(studentId)
+    ])
+
+    return { items, pagination: buildMeta(total, page, limit) }
 }
 
 module.exports = {

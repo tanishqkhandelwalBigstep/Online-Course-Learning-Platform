@@ -1,9 +1,13 @@
-function sendSuccess(res, statusCode, message, data){
-    return res.status(statusCode).json({
+function sendSuccess(res, statusCode, message, data, meta){
+    const body = {
         success: true,
         message,
         data
-    })
+    }
+    if (meta !== undefined){
+        body.meta = meta
+    }
+    return res.status(statusCode).json(body)
 }
 
 function sendError(res, statusCode, message){

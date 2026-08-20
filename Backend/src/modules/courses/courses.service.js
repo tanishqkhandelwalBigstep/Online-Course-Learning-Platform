@@ -2,6 +2,7 @@ const coursesRepository = require('./courses.repository')
 const categoriesRepository = require('../categories/categories.repository')
 const sectionsRepository = require('../sections/sections.repository')
 const lessonsRepository = require('../lessons/lessons.repository')
+const { getPagination, buildMeta } = require('../../utils/pagination')
 const { NotFoundError, BadRequestError, ForbiddenError } = require('../../utils/error')
 
 async function createCourse(instructorId, data){
@@ -20,8 +21,20 @@ async function createCourse(instructorId, data){
     return course
 }
 
-async function getAllPublishedCourses(){
-    return coursesRepository.findAllPublished()
+async function getAllPublishedCourses(query){
+    const { page, limit, skip } = getPagination(query)
+    const criteria = {
+        status: 'published',
+        search: query && query.search,
+        categoryId: query && query.category
+    }
+
+    const [items, total] = await Promise.all([
+        coursesRepository.findPaged(criteria, skip, limit),
+        coursesRepository.countByFilter(criteria)
+    ])
+
+    return { items, pagination: buildMeta(total, page, limit) }
 }
 
 async function getCourseById(courseId){

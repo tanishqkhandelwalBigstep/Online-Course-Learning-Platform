@@ -110,6 +110,32 @@ Error:
 
 All errors go through a single centralized error handler.
 
+## Pagination & Search
+
+List endpoints accept `page` (default 1) and `limit` (default 10, max 100) query params and return a `meta.pagination` object:
+
+```
+{
+  "success": true,
+  "message": "...",
+  "data": [ ... ],
+  "meta": {
+    "pagination": { "total": 42, "page": 1, "limit": 10, "totalPages": 5, "hasNextPage": true, "hasPrevPage": false }
+  }
+}
+```
+
+| Endpoint | Extra filters |
+|----------|---------------|
+| `GET /courses` | `search` (title/description), `category` (category id) |
+| `GET /admin/users` | `search` (name/email), `role` |
+| `GET /admin/courses` | `search` (title/description), `status` |
+| `GET /instructor/courses` | — |
+| `GET /my-courses` | — |
+| `GET /courses/:id/reviews` | — (rating summary is over all reviews; the list is paginated) |
+
+Search is case-insensitive and safe against regex special characters. Results use a stable sort (`createdAt` then `_id`) so pages never overlap.
+
 ## Logging
 
 Logging is file-based via `src/utils/logger.js`:
@@ -142,7 +168,7 @@ In development the same lines are also mirrored to stdout. Logging is disabled u
   aggregation, instructor dashboard and admin dashboard.
 - Seed data has three users (one per role).
 - Automated tests (unit + integration) are implemented and passing (see Testing below).
-- Pagination and search on list endpoints are planned but not yet implemented.
+- Pagination and search are implemented on all list endpoints (see Pagination & Search below).
 
 See `routes.txt` for the full list of available endpoints.
 

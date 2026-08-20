@@ -8,13 +8,13 @@ const createUser = asyncHandler(async (req, res) => {
 })
 
 const getUsers = asyncHandler(async (req, res) => {
-    const users = await adminService.getAllUsers()
-    return sendSuccess(res, 200, 'Users fetched successfully', users)
+    const result = await adminService.getAllUsers(req.query)
+    return sendSuccess(res, 200, 'Users fetched successfully', result.items, { pagination: result.pagination })
 })
 
 const getCourses = asyncHandler(async (req, res) => {
-    const courses = await adminService.getAllCourses()
-    return sendSuccess(res, 200, 'Courses fetched successfully', courses)
+    const result = await adminService.getAllCourses(req.query)
+    return sendSuccess(res, 200, 'Courses fetched successfully', result.items, { pagination: result.pagination })
 })
 
 const getOverview = asyncHandler(async (req, res) => {

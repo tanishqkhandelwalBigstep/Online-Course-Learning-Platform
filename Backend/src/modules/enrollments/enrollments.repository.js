@@ -14,6 +14,18 @@ function findByStudent(studentId){
         .sort('-createdAt')
 }
 
+function findByStudentPaged(studentId, skip, limit){
+    return Enrollment.find({ studentId })
+        .populate('courseId', 'title description status')
+        .sort('-createdAt -_id')
+        .skip(skip)
+        .limit(limit)
+}
+
+function countByStudent(studentId){
+    return Enrollment.countDocuments({ studentId })
+}
+
 function updateStatus(id, status){
     return Enrollment.findByIdAndUpdate(id, { status }, { new: true })
 }
@@ -30,6 +42,8 @@ module.exports = {
     createEnrollment,
     findByStudentAndCourse,
     findByStudent,
+    findByStudentPaged,
+    countByStudent,
     updateStatus,
     countByCourse,
     countAll
