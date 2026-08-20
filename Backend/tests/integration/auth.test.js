@@ -4,17 +4,20 @@ const { createUser } = require('../helpers/factory')
 
 describe('Auth API', () => {
     describe('POST /api/v1/auth/register', () => {
-        test('registers a new student and returns a token', async () => {
+        test('registers a new student and returns access and refresh tokens', async () => {
             const res = await request(app)
                 .post('/api/v1/auth/register')
                 .send({ name: 'Alice', email: 'alice@test.com', password: 'password123' })
 
             expect(res.status).toBe(201)
             expect(res.body.success).toBe(true)
-            expect(res.body.data.token).toBeDefined()
+            expect(res.body.data.accessToken).toBeDefined()
+            expect(res.body.data.refreshToken).toBeDefined()
             expect(res.body.data.user.role).toBe('student')
             expect(res.body.data.user.email).toBe('alice@test.com')
-            expect(res.headers['set-cookie'][0]).toMatch(/accessToken/)
+            const cookies = res.headers['set-cookie'].join(';')
+            expect(cookies).toMatch(/accessToken/)
+            expect(cookies).toMatch(/refreshToken/)
         })
 
         test('rejects an attempt to self-assign a role at registration', async () => {
@@ -66,7 +69,8 @@ describe('Auth API', () => {
                 .send({ email: student.email, password: 'secret123' })
 
             expect(res.status).toBe(200)
-            expect(res.body.data.token).toBeDefined()
+            expect(res.body.data.accessToken).toBeDefined()
+            expect(res.body.data.refreshToken).toBeDefined()
             expect(res.body.data.user.email).toBe('login@test.com')
         })
 
@@ -89,20 +93,94 @@ describe('Auth API', () => {
         })
     })
 
-    describe('POST /api/v1/auth/logout', () => {
-        test('requires authentication', async () => {
-            const res = await request(app).post('/api/v1/auth/logout')
+    describe('POST /api/v1/auth/refresh', () => {
+        async function loginAndGetRefreshToken(){
+            const student = await createUser('student', { email: `refresh${Date.now()}@test.com`, password: 'secret123' })
+            const res = await request(app)
+                .post('/api/v1/auth/login')
+                .send({ email: student.email, password: 'secret123' })
+            return res.body.data.refreshToken
+        }
+
+        test('issues a new access token from a valid refresh token', async () => {
+            const refreshToken = await loginAndGetRefreshToken()
+
+            const res = await request(app)
+                .post('/api/v1/auth/refresh')
+                .send({ refreshToken })
+
+            expect(res.status).toBe(200)
+            expect(res.body.data.accessToken).toBeDefined()
+            expect(res.body.data.refreshToken).toBeDefined()
+            expect(res.body.data.refreshToken).not.toBe(refreshToken)
+        })
+
+        test('rejects a request with no refresh token', async () => {
+            const res = await request(app).post('/api/v1/auth/refresh').send({})
             expect(res.status).toBe(401)
         })
 
-        test('logs out an authenticated user', async () => {
-            const student = await createUser('student')
+        test('rejects a malformed refresh token', async () => {
             const res = await request(app)
-                .post('/api/v1/auth/logout')
-                .set('Authorization', student.authHeader)
+                .post('/api/v1/auth/refresh')
+                .send({ refreshToken: 'not.a.token' })
+            expect(res.status).toBe(401)
+        })
 
+        test('rotates the refresh token: the old one cannot be reused', async () => {
+            const refreshToken = await loginAndGetRefreshToken()
+
+            const first = await request(app)
+                .post('/api/v1/auth/refresh')
+                .send({ refreshToken })
+            expect(first.status).toBe(200)
+
+            const reuse = await request(app)
+                .post('/api/v1/auth/refresh')
+                .send({ refreshToken })
+            expect(reuse.status).toBe(401)
+        })
+
+        test('reusing a rotated token also invalidates the newly issued one (reuse detection)', async () => {
+            const refreshToken = await loginAndGetRefreshToken()
+
+            const rotated = await request(app)
+                .post('/api/v1/auth/refresh')
+                .send({ refreshToken })
+            const newRefreshToken = rotated.body.data.refreshToken
+
+            await request(app).post('/api/v1/auth/refresh').send({ refreshToken })
+
+            const res = await request(app)
+                .post('/api/v1/auth/refresh')
+                .send({ refreshToken: newRefreshToken })
+            expect(res.status).toBe(401)
+        })
+    })
+
+    describe('POST /api/v1/auth/logout', () => {
+        test('succeeds even without a token and clears cookies', async () => {
+            const res = await request(app).post('/api/v1/auth/logout')
             expect(res.status).toBe(200)
             expect(res.body.success).toBe(true)
+        })
+
+        test('revokes the refresh token so it can no longer be refreshed', async () => {
+            const student = await createUser('student', { email: `logout${Date.now()}@test.com`, password: 'secret123' })
+            const login = await request(app)
+                .post('/api/v1/auth/login')
+                .send({ email: student.email, password: 'secret123' })
+            const refreshToken = login.body.data.refreshToken
+
+            const out = await request(app)
+                .post('/api/v1/auth/logout')
+                .send({ refreshToken })
+            expect(out.status).toBe(200)
+
+            const res = await request(app)
+                .post('/api/v1/auth/refresh')
+                .send({ refreshToken })
+            expect(res.status).toBe(401)
         })
     })
 

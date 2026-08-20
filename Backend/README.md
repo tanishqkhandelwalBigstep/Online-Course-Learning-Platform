@@ -121,9 +121,18 @@ In development the same lines are also mirrored to stdout. Logging is disabled u
 
 ## Authentication
 
-- JWT is returned on register/login and also set as an httpOnly cookie.
-- `authenticate` reads the token from the cookie or the `Authorization: Bearer` header.
+- Register and login return a short-lived **access token** and a long-lived **refresh token**. Both are also set as `httpOnly` cookies (`accessToken`, and `refreshToken` scoped to `/api/v1/auth`).
+- `authenticate` reads the access token from the `accessToken` cookie or the `Authorization: Bearer` header, verifies it and loads the user.
 - `authorize(...roles)` restricts a route to specific roles.
+- `POST /api/v1/auth/refresh` exchanges a valid refresh token for a new access token. Refresh tokens are **stored in the database, rotated on every refresh, and revocable**. Reusing an already-rotated token triggers reuse detection and revokes all of that user's refresh tokens.
+- `POST /api/v1/auth/logout` revokes the current refresh token and clears the cookies.
+
+## Security
+
+- `helmet` sets secure HTTP response headers (HSTS, no-sniff, frame-guard, and `X-Powered-By` removed).
+- `cors` allows only the origins listed in `CORS_ORIGIN` (comma-separated) and permits credentials so cookie auth works from the frontend.
+- `express-rate-limit` applies a global limit to `/api/v1` and a stricter limit to `/api/v1/auth`. Limits are configurable via `RATE_LIMIT_*` env vars and disabled under `NODE_ENV=test`.
+- Access tokens are short-lived (default 15m) and refresh tokens long-lived (default 7d); both are configurable via env vars. Secrets are separate for access and refresh tokens.
 
 ## Current Status
 

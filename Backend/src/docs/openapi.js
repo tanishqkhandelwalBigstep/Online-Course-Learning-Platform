@@ -137,10 +137,32 @@ const openapiSpec = {
                 responses
             }
         },
+        '/api/v1/auth/refresh': {
+            post: {
+                tags: ['Auth'],
+                summary: 'Exchange a refresh token for a new access token (rotates the refresh token)',
+                security: [],
+                requestBody: {
+                    required: false,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    refreshToken: { type: 'string' }
+                                }
+                            }
+                        }
+                    }
+                },
+                responses
+            }
+        },
         '/api/v1/auth/logout': {
             post: {
                 tags: ['Auth'],
-                summary: 'Logout (clears cookie)',
+                summary: 'Logout (revokes the refresh token and clears cookies)',
+                security: [],
                 responses
             }
         },

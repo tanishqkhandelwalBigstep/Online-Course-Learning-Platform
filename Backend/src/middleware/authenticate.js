@@ -1,4 +1,4 @@
-const { verifyToken } = require('../utils/token')
+const { verifyAccessToken } = require('../utils/token')
 const { UnauthorizedError } = require('../utils/error')
 const usersRepository = require('../modules/users/users.repository')
 
@@ -20,7 +20,7 @@ async function authenticate(req, res, next){
             throw new UnauthorizedError('Authentication required')
         }
 
-        const payload = verifyToken(token)
+        const payload = verifyAccessToken(token)
 
         const user = await usersRepository.findById(payload.userId)
         if (!user){

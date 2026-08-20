@@ -1,6 +1,6 @@
 const User = require('../../src/modules/users/users.model')
 const { createPassword } = require('../../src/utils/hash')
-const { signToken } = require('../../src/utils/token')
+const { signAccessToken } = require('../../src/utils/token')
 
 let counter = 0
 
@@ -19,7 +19,7 @@ async function createUser(role, overrides = {}){
         password: hashed,
         role
     })
-    const token = signToken({ userId: user._id.toString(), role: user.role })
+    const token = signAccessToken({ userId: user._id.toString(), role: user.role })
     return {
         id: user._id.toString(),
         email: user.email,
