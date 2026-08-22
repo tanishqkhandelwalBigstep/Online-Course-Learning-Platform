@@ -8,7 +8,7 @@ const createSection = asyncHandler(async (req, res) => {
 })
 
 const getCourseSections = asyncHandler(async (req, res) => {
-    const sections = await sectionsService.getCourseSections(req.params.id)
+    const sections = await sectionsService.getCourseSections(req.params.id, req.user)
     return sendSuccess(res, 200, 'Sections fetched successfully', sections)
 })
 

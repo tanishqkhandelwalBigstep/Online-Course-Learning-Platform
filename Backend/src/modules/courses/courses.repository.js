@@ -30,6 +30,12 @@ function findById(id){
     return Course.findById(id)
 }
 
+function findByIdPopulated(id){
+    return Course.findById(id)
+        .populate('categoryId', 'name')
+        .populate('instructorId', 'name')
+}
+
 function findAllPublished(){
     return Course.find({ status: 'published' })
         .populate('categoryId', 'name')
@@ -72,6 +78,10 @@ function updateById(id, data){
     return Course.findByIdAndUpdate(id, data, { new: true })
 }
 
+function deleteById(id){
+    return Course.findByIdAndDelete(id)
+}
+
 function findAllCourses(){
     return Course.find()
         .populate('categoryId', 'name')
@@ -90,6 +100,7 @@ function countByStatus(status){
 module.exports = {
     createCourse,
     findById,
+    findByIdPopulated,
     findAllPublished,
     findPaged,
     countByFilter,
@@ -97,6 +108,7 @@ module.exports = {
     findByInstructorPaged,
     countByInstructor,
     updateById,
+    deleteById,
     findAllCourses,
     countAll,
     countByStatus

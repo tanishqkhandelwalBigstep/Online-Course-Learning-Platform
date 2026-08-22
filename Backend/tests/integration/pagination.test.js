@@ -15,6 +15,7 @@ async function seedPublishedCourses(titles, options = {}){
             categoryId: category._id,
             title,
             description,
+            thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg',
             status: 'published'
         }
     })

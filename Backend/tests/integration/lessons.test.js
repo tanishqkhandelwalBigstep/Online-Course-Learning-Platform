@@ -32,7 +32,7 @@ describe('Lesson creation edge cases', () => {
         const courseRes = await request(app)
             .post('/api/v1/courses')
             .set('Authorization', instructor.authHeader)
-            .send({ title: 'Range Course', description: 'Course description', categoryId: categoryRes.body.data._id })
+            .send({ title: 'Range Course', description: 'Course description', categoryId: categoryRes.body.data._id, thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
         const sectionId = await addSection(courseRes.body.data._id, instructor)
 
         const payload = buildLessonPayload()

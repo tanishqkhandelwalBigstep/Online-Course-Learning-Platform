@@ -261,11 +261,13 @@ const openapiSpec = {
                         'application/json': {
                             schema: {
                                 type: 'object',
-                                required: ['title', 'description', 'categoryId'],
+                                required: ['title', 'description', 'categoryId', 'thumbnailUrl'],
                                 properties: {
                                     title: { type: 'string', example: 'Python 101' },
                                     description: { type: 'string', example: 'Learn Python from scratch' },
-                                    categoryId: { type: 'string', example: 'PASTE_categoryId' }
+                                    categoryId: { type: 'string', example: 'PASTE_categoryId' },
+                                    thumbnailUrl: { type: 'string', format: 'uri', example: 'https://cdn.example.com/python-101.jpg' },
+                                    price: { type: 'number', minimum: 0, default: 5000, description: 'Enrollment fee in INR (₹). Defaults to 5000 if omitted.', example: 5000 }
                                 }
                             }
                         }
@@ -277,8 +279,38 @@ const openapiSpec = {
         '/api/v1/courses/{id}': {
             get: {
                 tags: ['Courses'],
-                summary: 'Get a single course',
+                summary: 'Get a single course by id',
                 security: [],
+                parameters: [idParam],
+                responses
+            },
+            put: {
+                tags: ['Courses'],
+                summary: 'Update a course (owner instructor or admin)',
+                parameters: [idParam],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                minProperties: 1,
+                                properties: {
+                                    title: { type: 'string' },
+                                    description: { type: 'string' },
+                                    categoryId: { type: 'string' },
+                                    thumbnailUrl: { type: 'string', format: 'uri' },
+                                    price: { type: 'number', minimum: 0 }
+                                }
+                            }
+                        }
+                    }
+                },
+                responses
+            },
+            delete: {
+                tags: ['Courses'],
+                summary: 'Delete a course and cascade (owner instructor or admin)',
                 parameters: [idParam],
                 responses
             }
@@ -294,7 +326,7 @@ const openapiSpec = {
         '/api/v1/courses/{id}/sections': {
             get: {
                 tags: ['Sections'],
-                summary: 'List sections with their lessons',
+                summary: 'List sections with their lessons (outline public; videoUrl + quiz returned only for enrolled students, the owner instructor, or admin)',
                 security: [],
                 parameters: [idParam],
                 responses
@@ -485,7 +517,7 @@ const openapiSpec = {
             },
             post: {
                 tags: ['Reviews'],
-                summary: 'Add a review (enrolled student, one per course)',
+                summary: 'Add a rating (enrolled student, one per course)',
                 parameters: [idParam],
                 requestBody: {
                     required: true,
@@ -495,13 +527,38 @@ const openapiSpec = {
                                 type: 'object',
                                 required: ['rating'],
                                 properties: {
-                                    rating: { type: 'integer', minimum: 1, maximum: 5, example: 5 },
-                                    comment: { type: 'string', example: 'Really helpful course!' }
+                                    rating: { type: 'integer', minimum: 1, maximum: 5, example: 5 }
                                 }
                             }
                         }
                     }
                 },
+                responses
+            },
+            put: {
+                tags: ['Reviews'],
+                summary: 'Update your own rating (enrolled student)',
+                parameters: [idParam],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                required: ['rating'],
+                                properties: {
+                                    rating: { type: 'integer', minimum: 1, maximum: 5, example: 4 }
+                                }
+                            }
+                        }
+                    }
+                },
+                responses
+            },
+            delete: {
+                tags: ['Reviews'],
+                summary: 'Delete your own rating (student)',
+                parameters: [idParam],
                 responses
             }
         },

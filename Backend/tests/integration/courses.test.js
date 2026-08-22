@@ -34,7 +34,7 @@ describe('Courses API', () => {
         const res = await request(app)
             .post('/api/v1/courses')
             .set('Authorization', instructor.authHeader)
-            .send({ title: 'Node Basics', description: 'Learn Node from scratch', categoryId })
+            .send({ title: 'Node Basics', description: 'Learn Node from scratch', categoryId, thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
 
         expect(res.status).toBe(201)
         expect(res.body.data.status).toBe('draft')
@@ -45,7 +45,7 @@ describe('Courses API', () => {
         const res = await request(app)
             .post('/api/v1/courses')
             .set('Authorization', instructor.authHeader)
-            .send({ title: 'Node Basics', description: 'Learn Node from scratch', categoryId: 'a'.repeat(24) })
+            .send({ title: 'Node Basics', description: 'Learn Node from scratch', categoryId: 'a'.repeat(24), thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
 
         expect(res.status).toBe(400)
     })
@@ -56,7 +56,7 @@ describe('Courses API', () => {
         const res = await request(app)
             .post('/api/v1/courses')
             .set('Authorization', instructor.authHeader)
-            .send({ title: 'Node Basics', categoryId })
+            .send({ title: 'Node Basics', categoryId, thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
 
         expect(res.status).toBe(400)
     })
@@ -67,7 +67,7 @@ describe('Courses API', () => {
         const courseRes = await request(app)
             .post('/api/v1/courses')
             .set('Authorization', instructor.authHeader)
-            .send({ title: 'Empty Course', description: 'Has no lessons yet', categoryId })
+            .send({ title: 'Empty Course', description: 'Has no lessons yet', categoryId, thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
 
         const res = await request(app)
             .put(`/api/v1/courses/${courseRes.body.data._id}/publish`)
@@ -83,7 +83,7 @@ describe('Courses API', () => {
         const courseRes = await request(app)
             .post('/api/v1/courses')
             .set('Authorization', instructor.authHeader)
-            .send({ title: 'Real Course', description: 'Has a lesson', categoryId })
+            .send({ title: 'Real Course', description: 'Has a lesson', categoryId, thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
         const courseId = courseRes.body.data._id
 
         await addSectionWithLesson(courseId, instructor)
@@ -103,7 +103,7 @@ describe('Courses API', () => {
         const courseRes = await request(app)
             .post('/api/v1/courses')
             .set('Authorization', owner.authHeader)
-            .send({ title: 'Owned Course', description: 'Belongs to owner', categoryId })
+            .send({ title: 'Owned Course', description: 'Belongs to owner', categoryId, thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
         const courseId = courseRes.body.data._id
         await addSectionWithLesson(courseId, owner)
 
@@ -121,7 +121,7 @@ describe('Courses API', () => {
         const courseRes = await request(app)
             .post('/api/v1/courses')
             .set('Authorization', owner.authHeader)
-            .send({ title: 'Owned Course', description: 'Belongs to owner', categoryId })
+            .send({ title: 'Owned Course', description: 'Belongs to owner', categoryId, thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
         const courseId = courseRes.body.data._id
         const sectionRes = await request(app)
             .post(`/api/v1/courses/${courseId}/sections`)
@@ -142,7 +142,7 @@ describe('Courses API', () => {
         const courseRes = await request(app)
             .post('/api/v1/courses')
             .set('Authorization', instructor.authHeader)
-            .send({ title: 'Course', description: 'A description', categoryId })
+            .send({ title: 'Course', description: 'A description', categoryId, thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
         const sectionRes = await request(app)
             .post(`/api/v1/courses/${courseRes.body.data._id}/sections`)
             .set('Authorization', instructor.authHeader)
@@ -166,7 +166,7 @@ describe('Courses API', () => {
         const publishedRes = await request(app)
             .post('/api/v1/courses')
             .set('Authorization', instructor.authHeader)
-            .send({ title: 'Published One', description: 'Will be published', categoryId })
+            .send({ title: 'Published One', description: 'Will be published', categoryId, thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
         await addSectionWithLesson(publishedRes.body.data._id, instructor)
         await request(app)
             .put(`/api/v1/courses/${publishedRes.body.data._id}/publish`)
@@ -175,7 +175,7 @@ describe('Courses API', () => {
         await request(app)
             .post('/api/v1/courses')
             .set('Authorization', instructor.authHeader)
-            .send({ title: 'Draft One', description: 'Stays a draft', categoryId })
+            .send({ title: 'Draft One', description: 'Stays a draft', categoryId, thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
 
         const res = await request(app).get('/api/v1/courses')
         expect(res.status).toBe(200)

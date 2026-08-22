@@ -25,6 +25,18 @@ function countByCourse(courseId){
     return Review.countDocuments({ courseId })
 }
 
+function updateByStudentAndCourse(studentId, courseId, data){
+    return Review.findOneAndUpdate({ studentId, courseId }, data, { new: true })
+}
+
+function deleteByStudentAndCourse(studentId, courseId){
+    return Review.findOneAndDelete({ studentId, courseId })
+}
+
+function deleteByCourse(courseId){
+    return Review.deleteMany({ courseId })
+}
+
 async function getRatingSummary(courseId){
     const result = await Review.aggregate([
         { $match: { courseId: new mongoose.Types.ObjectId(courseId) } },
@@ -47,5 +59,8 @@ module.exports = {
     findByCourse,
     findByCoursePaged,
     countByCourse,
+    updateByStudentAndCourse,
+    deleteByStudentAndCourse,
+    deleteByCourse,
     getRatingSummary
 }

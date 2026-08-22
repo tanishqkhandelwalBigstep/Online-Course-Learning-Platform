@@ -7,7 +7,7 @@ describe('Auth API', () => {
         test('registers a new student and returns access and refresh tokens', async () => {
             const res = await request(app)
                 .post('/api/v1/auth/register')
-                .send({ name: 'Alice', email: 'alice@test.com', password: 'password123' })
+                .send({ name: 'Alice', email: 'alice@test.com', password: 'password1!' })
 
             expect(res.status).toBe(201)
             expect(res.body.success).toBe(true)
@@ -23,7 +23,7 @@ describe('Auth API', () => {
         test('rejects an attempt to self-assign a role at registration', async () => {
             const res = await request(app)
                 .post('/api/v1/auth/register')
-                .send({ name: 'Mallory', email: 'mallory@test.com', password: 'password123', role: 'admin' })
+                .send({ name: 'Mallory', email: 'mallory@test.com', password: 'password1!', role: 'admin' })
 
             expect(res.status).toBe(400)
         })
@@ -31,7 +31,7 @@ describe('Auth API', () => {
         test('a plain registration produces a student role', async () => {
             const res = await request(app)
                 .post('/api/v1/auth/register')
-                .send({ name: 'Carol', email: 'carol@test.com', password: 'password123' })
+                .send({ name: 'Carol', email: 'carol@test.com', password: 'password1!' })
 
             expect(res.status).toBe(201)
             expect(res.body.data.user.role).toBe('student')
@@ -40,11 +40,11 @@ describe('Auth API', () => {
         test('rejects a duplicate email with 409', async () => {
             await request(app)
                 .post('/api/v1/auth/register')
-                .send({ name: 'Bob', email: 'bob@test.com', password: 'password123' })
+                .send({ name: 'Bob', email: 'bob@test.com', password: 'password1!' })
 
             const res = await request(app)
                 .post('/api/v1/auth/register')
-                .send({ name: 'Bob Again', email: 'bob@test.com', password: 'password123' })
+                .send({ name: 'Bob Again', email: 'bob@test.com', password: 'password1!' })
 
             expect(res.status).toBe(409)
             expect(res.body.success).toBe(false)
@@ -57,6 +57,23 @@ describe('Auth API', () => {
 
             expect(res.status).toBe(400)
             expect(res.body.success).toBe(false)
+        })
+
+        test('rejects a password without a number or special character', async () => {
+            const res = await request(app)
+                .post('/api/v1/auth/register')
+                .send({ name: 'Weak Pass', email: 'weak@test.com', password: 'password' })
+
+            expect(res.status).toBe(400)
+            expect(res.body.message).toMatch(/number and one special character/i)
+        })
+
+        test('accepts a password containing a number and a special character', async () => {
+            const res = await request(app)
+                .post('/api/v1/auth/register')
+                .send({ name: 'Strong Pass', email: 'strong@test.com', password: 'Passw0rd!' })
+
+            expect(res.status).toBe(201)
         })
     })
 

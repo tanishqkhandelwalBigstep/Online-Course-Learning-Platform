@@ -22,9 +22,21 @@ const publishCourse = asyncHandler(async (req, res) => {
     return sendSuccess(res, 200, 'Course published successfully', course)
 })
 
+const updateCourse = asyncHandler(async (req, res) => {
+    const course = await coursesService.updateCourse(req.user, req.params.id, req.body)
+    return sendSuccess(res, 200, 'Course updated successfully', course)
+})
+
+const deleteCourse = asyncHandler(async (req, res) => {
+    const result = await coursesService.deleteCourse(req.user, req.params.id)
+    return sendSuccess(res, 200, 'Course deleted successfully', result)
+})
+
 module.exports = {
     createCourse,
     getAllCourses,
     getCourse,
-    publishCourse
+    publishCourse,
+    updateCourse,
+    deleteCourse
 }

@@ -28,6 +28,10 @@ function deleteById(id){
     return Lesson.findByIdAndDelete(id)
 }
 
+function deleteBySectionIds(sectionIds){
+    return Lesson.deleteMany({ sectionId: { $in: sectionIds } })
+}
+
 module.exports = {
     createLesson,
     findById,
@@ -35,5 +39,6 @@ module.exports = {
     findBySectionIds,
     countBySectionId,
     countBySectionIds,
-    deleteById
+    deleteById,
+    deleteBySectionIds
 }

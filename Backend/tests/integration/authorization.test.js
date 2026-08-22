@@ -65,7 +65,7 @@ describe('Authorization / RBAC', () => {
         const res = await request(app)
             .post('/api/v1/admin/users')
             .set('Authorization', admin.authHeader)
-            .send({ name: 'New Instructor', email: 'newinstructor@test.com', password: 'password123', role: 'instructor' })
+            .send({ name: 'New Instructor', email: 'newinstructor@test.com', password: 'password1!', role: 'instructor' })
 
         expect(res.status).toBe(201)
         expect(res.body.data.role).toBe('instructor')

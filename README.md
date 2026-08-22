@@ -42,17 +42,20 @@ The frontend will be implemented separately and connected to the backend REST AP
 Course_learning/
 │
 ├── .gitignore
+├── README.md
 │
-├── Backend/
-│   ├── README.md
-│   ├── package.json
-│   ├── package-lock.json
-│   ├── server.js
-│   ├── src/
-│   └── tests/
-│
-└── Frontend/              # Planned
+└── Backend/
+    ├── README.md
+    ├── package.json
+    ├── package-lock.json
+    ├── server.js
+    ├── seed.js
+    ├── postman/
+    ├── src/
+    └── tests/
 ```
+
+> The repository is currently **backend-only**. A frontend will be planned and built from scratch in a later stage and will consume the backend REST API.
 
 ## Backend
 
@@ -80,10 +83,11 @@ MongoDB
 * JWT-based authentication
 * Role-based authorization
 * User management
-* Category management
-* Course management
+* Category management (admin)
+* Course management — create/update/delete (instructor/admin), thumbnail URL, enrollment fee (₹, default 5000)
+* Course search (case-insensitive) and category filtering, with pagination
 * Section management
-* Lesson management
+* Lesson management (lesson content and quizzes are enrollment-gated)
 * Course enrollment
 * Lesson progress tracking
 * Quiz management
@@ -120,9 +124,18 @@ Example:
 ```env
 PORT=3000
 MONGO_URI=mongodb://127.0.0.1:27017/online_learning
-JWT_SECRET=your_jwt_secret_here
-JWT_EXPIRES_IN=7d
 NODE_ENV=development
+
+JWT_SECRET=your_jwt_secret_here
+JWT_ACCESS_SECRET=your_access_token_secret_here
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_SECRET=your_refresh_token_secret_here
+JWT_REFRESH_EXPIRES_IN=7d
+
+CORS_ORIGIN=http://localhost:5173
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=300
+AUTH_RATE_LIMIT_MAX=30
 ```
 
 Start MongoDB and run the backend:
@@ -139,13 +152,12 @@ http://localhost:3000/api/v1
 
 ## Authentication
 
-The backend uses JWT-based authentication.
+The backend uses JWT-based authentication with **access + refresh tokens**.
 
-Authentication tokens are:
-
-* Returned during registration/login
-* Stored using an `httpOnly` cookie
-* Also supported through the `Authorization: Bearer <token>` header
+* A short-lived **access token** and a long-lived **refresh token** are returned on register/login and also set as `httpOnly` cookies.
+* Protected requests send the access token via the `accessToken` cookie or the `Authorization: Bearer <token>` header.
+* `POST /api/v1/auth/refresh` exchanges a valid refresh token for a new access token (refresh tokens are stored in the database and rotated on use).
+* `POST /api/v1/auth/logout` revokes the refresh token and clears the cookies.
 
 Role-based authorization is handled through middleware.
 

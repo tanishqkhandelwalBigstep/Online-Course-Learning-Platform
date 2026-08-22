@@ -15,7 +15,7 @@ async function buildPublishedCourse(overrides = {}){
     const courseRes = await request(app)
         .post('/api/v1/courses')
         .set('Authorization', instructor.authHeader)
-        .send({ title: 'Full Journey Course', description: 'A complete course', categoryId })
+        .send({ title: 'Full Journey Course', description: 'A complete course', categoryId, thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
     const courseId = courseRes.body.data._id
 
     const sectionRes = await request(app)
@@ -158,7 +158,7 @@ describe('End-to-end learning journey', () => {
         const courseRes = await request(app)
             .post('/api/v1/courses')
             .set('Authorization', instructor.authHeader)
-            .send({ title: 'Draft Course', description: 'Not published yet', categoryId: categoryRes.body.data._id })
+            .send({ title: 'Draft Course', description: 'Not published yet', categoryId: categoryRes.body.data._id, thumbnailUrl: 'https://cdn.colearn.test/thumb.jpg' })
 
         const student = await createUser('student')
         const res = await request(app)
@@ -197,7 +197,7 @@ describe('End-to-end learning journey', () => {
         const unenrolledReview = await request(app)
             .post(`/api/v1/courses/${course.courseId}/reviews`)
             .set('Authorization', student.authHeader)
-            .send({ rating: 5, comment: 'Great' })
+            .send({ rating: 5 })
         expect(unenrolledReview.status).toBe(403)
 
         await request(app)
@@ -207,13 +207,13 @@ describe('End-to-end learning journey', () => {
         const reviewRes = await request(app)
             .post(`/api/v1/courses/${course.courseId}/reviews`)
             .set('Authorization', student.authHeader)
-            .send({ rating: 4, comment: 'Solid' })
+            .send({ rating: 4 })
         expect(reviewRes.status).toBe(201)
 
         const dupReview = await request(app)
             .post(`/api/v1/courses/${course.courseId}/reviews`)
             .set('Authorization', student.authHeader)
-            .send({ rating: 3, comment: 'Changed my mind' })
+            .send({ rating: 3 })
         expect(dupReview.status).toBe(409)
 
         const listRes = await request(app).get(`/api/v1/courses/${course.courseId}/reviews`)

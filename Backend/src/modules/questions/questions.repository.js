@@ -16,9 +16,14 @@ function deleteByQuiz(quizId){
     return Question.deleteMany({ quizId })
 }
 
+function deleteByQuizIds(quizIds){
+    return Question.deleteMany({ quizId: { $in: quizIds } })
+}
+
 module.exports = {
     createMany,
     findByQuiz,
     countByQuiz,
-    deleteByQuiz
+    deleteByQuiz,
+    deleteByQuizIds
 }

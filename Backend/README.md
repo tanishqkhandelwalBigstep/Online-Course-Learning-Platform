@@ -80,15 +80,19 @@ seed.js
 
 The server runs on the port from `.env` (default 3000). Base API URL: `http://localhost:3000/api/v1`.
 
-## Seed / Sample Users
+## Seed / Sample Data
 
-`node seed.js` clears the database and creates three users:
+`node seed.js` is **idempotent and non-destructive** — it ensures a baseline dataset exists and is safe to re-run (it never drops the database; it skips anything already present).
+
+It ensures three sample users:
 
 | Role | Email | Password |
 |------|-------|----------|
 | admin | admin@tech.com | admin123 |
 | instructor | instructor@tech.com | instructor123 |
 | student | user@tech.com | user123 |
+
+It also ensures one category (**Web Development**) and one published sample course created by the instructor — **"The Complete Web Developer Course"** — with **4 sections and 12 lessons**, each lesson having a real tutorial video URL and its own 5-question quiz (60 questions total). This baseline stays in the database until removed explicitly (e.g. `DELETE /api/v1/courses/:id`, which cascades).
 
 ## Database
 
@@ -163,12 +167,21 @@ In development the same lines are also mirrored to stdout. Logging is disabled u
 ## Current Status
 
 - Database schema for all entities is implemented and matches the requirement document.
-- Implemented features: authentication, categories, courses, sections, lessons with quizzes,
-  enrollment, progress tracking, quiz attempts with server-side scoring, reviews with rating
-  aggregation, instructor dashboard and admin dashboard.
+- Implemented features: authentication (access + refresh tokens), categories, courses, sections,
+  lessons with quizzes, enrollment, progress tracking, quiz attempts with server-side scoring,
+  reviews (rating only), instructor dashboard and admin dashboard.
+- **Courses** carry a required `thumbnailUrl` and an `enrollment fee` (`price`, in ₹ INR, default 5000).
+  Instructors/admins can **create, update, publish and delete** a course (delete cascades to its
+  sections, lessons, quizzes, questions, attempts, enrollments, progress and reviews).
+- **Lesson content is enrollment-gated:** `GET /courses/:id/sections` returns the lesson outline
+  publicly, but each lesson's `videoUrl` and quiz are returned only to enrolled students, the owner
+  instructor, or an admin. Taking a quiz still requires enrollment.
+- **Reviews are rating-only (1–5):** enrolled students can add, update and delete their own rating
+  (one per course); the list endpoint returns the average rating, total and a paginated list.
 - Seed data has three users (one per role).
 - Automated tests (unit + integration) are implemented and passing (see Testing below).
-- Pagination and search are implemented on all list endpoints (see Pagination & Search below).
+- Pagination and search are implemented on list endpoints (see Pagination & Search below);
+  courses support `?search=` (case-insensitive) and `?category=<categoryId>`.
 
 See `routes.txt` for the full list of available endpoints.
 

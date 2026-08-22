@@ -16,9 +16,14 @@ function countByCourse(courseId){
     return Section.countDocuments({ courseId })
 }
 
+function deleteByCourse(courseId){
+    return Section.deleteMany({ courseId })
+}
+
 module.exports = {
     createSection,
     findById,
     findByCourse,
-    countByCourse
+    countByCourse,
+    deleteByCourse
 }

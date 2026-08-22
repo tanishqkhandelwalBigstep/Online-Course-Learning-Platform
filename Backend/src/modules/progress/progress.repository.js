@@ -16,9 +16,14 @@ function deleteByLesson(lessonId){
     return Progress.deleteMany({ lessonId })
 }
 
+function deleteByLessonIds(lessonIds){
+    return Progress.deleteMany({ lessonId: { $in: lessonIds } })
+}
+
 module.exports = {
     createProgress,
     findByStudentAndLesson,
     findCompletedLessons,
-    deleteByLesson
+    deleteByLesson,
+    deleteByLessonIds
 }

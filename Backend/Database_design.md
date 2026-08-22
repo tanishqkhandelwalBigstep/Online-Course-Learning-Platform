@@ -70,6 +70,8 @@ erDiagram
         ObjectId categoryId FK "-> Category"
         string title
         string description
+        string thumbnailUrl
+        number price "INR, default 5000"
         string status "draft | published"
         date createdAt
         date updatedAt
@@ -150,7 +152,6 @@ erDiagram
         ObjectId studentId FK "-> User"
         ObjectId courseId FK "-> Course"
         number rating "1-5"
-        string comment "optional"
         date createdAt
         date updatedAt
     }
@@ -221,6 +222,8 @@ Cardinality is enforced by unique/compound indexes (see the Indexes section).
 | categoryId | ObjectId → Category | required, indexed |
 | title | String | required |
 | description | String | required |
+| thumbnailUrl | String | required (validated as an http/https URL) |
+| price | Number | required, min 0, default 5000 (enrollment fee in ₹ INR; no payment is processed) |
 | status | String | enum: draft, published (default draft), indexed |
 
 ### Section
@@ -291,9 +294,8 @@ The correct answer is stored as the index of the correct option so scoring can b
 | studentId | ObjectId → User | required |
 | courseId | ObjectId → Course | required |
 | rating | Number | required, 1 to 5 |
-| comment | String | optional |
 
-Unique compound index on (studentId, courseId) enforces one review per student per course.
+Reviews are rating-only (no free-text comment). Unique compound index on (studentId, courseId) enforces one rating per student per course. An enrolled student can add, update and delete their own rating; the list endpoint returns the average rating, total and a paginated list.
 
 ### RefreshToken
 | Field | Type | Rules |

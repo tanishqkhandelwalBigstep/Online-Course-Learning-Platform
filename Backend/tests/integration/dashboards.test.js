@@ -133,12 +133,12 @@ describe('Admin dashboard', () => {
         await request(app)
             .post('/api/v1/admin/users')
             .set('Authorization', admin.authHeader)
-            .send({ name: 'Dup', email: 'dup@test.com', password: 'password123', role: 'instructor' })
+            .send({ name: 'Dup', email: 'dup@test.com', password: 'password1!', role: 'instructor' })
 
         const res = await request(app)
             .post('/api/v1/admin/users')
             .set('Authorization', admin.authHeader)
-            .send({ name: 'Dup2', email: 'dup@test.com', password: 'password123', role: 'student' })
+            .send({ name: 'Dup2', email: 'dup@test.com', password: 'password1!', role: 'student' })
 
         expect(res.status).toBe(409)
     })

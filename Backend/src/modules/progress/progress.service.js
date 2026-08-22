@@ -83,7 +83,29 @@ async function getCourseProgress(studentId, courseId){
         throw new NotFoundError('Course not found')
     }
 
-    return computeProgress(studentId, courseId)
+    const progress = await computeProgress(studentId, courseId)
+
+    const sections = await sectionsRepository.findByCourse(courseId)
+    const sectionIds = sections.map((section) => section._id)
+    const lessons = await lessonsRepository.findBySectionIds(sectionIds)
+    const lessonIds = lessons.map((lesson) => lesson._id)
+
+    const completedRecords = await progressRepository.findCompletedLessons(studentId, lessonIds)
+    const completedLessonIds = completedRecords.map((record) => record.lessonId.toString())
+
+    const quizzes = await quizzesRepository.findByLessonIds(lessonIds)
+    const quizAttempts = {}
+    for (const quiz of quizzes){
+        const attemptsUsed = await quizAttemptsRepository.countByQuizAndStudent(quiz._id, studentId)
+        const passedCount = await quizAttemptsRepository.countPassed(quiz._id, studentId)
+        quizAttempts[quiz._id.toString()] = {
+            attemptsUsed,
+            attemptLimit: quiz.attemptLimit,
+            passed: passedCount > 0
+        }
+    }
+
+    return { ...progress, completedLessonIds, quizAttempts }
 }
 
 async function checkAndMarkCourseCompleted(studentId, courseId){

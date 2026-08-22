@@ -23,10 +23,28 @@ async function addReview(studentId, courseId, data){
     const review = await reviewsRepository.createReview({
         studentId,
         courseId,
-        rating: data.rating,
-        comment: data.comment
+        rating: data.rating
     })
     return review
+}
+
+async function updateReview(studentId, courseId, data){
+    const existing = await reviewsRepository.findByStudentAndCourse(studentId, courseId)
+    if (!existing){
+        throw new NotFoundError('You have not reviewed this course yet')
+    }
+
+    return reviewsRepository.updateByStudentAndCourse(studentId, courseId, { rating: data.rating })
+}
+
+async function deleteReview(studentId, courseId){
+    const existing = await reviewsRepository.findByStudentAndCourse(studentId, courseId)
+    if (!existing){
+        throw new NotFoundError('You have not reviewed this course yet')
+    }
+
+    await reviewsRepository.deleteByStudentAndCourse(studentId, courseId)
+    return { deleted: true }
 }
 
 async function getCourseReviews(courseId, query){
@@ -55,5 +73,7 @@ async function getCourseReviews(courseId, query){
 
 module.exports = {
     addReview,
+    updateReview,
+    deleteReview,
     getCourseReviews
 }

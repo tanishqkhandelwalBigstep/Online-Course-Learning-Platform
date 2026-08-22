@@ -38,6 +38,10 @@ function countAll(){
     return Enrollment.countDocuments()
 }
 
+function deleteByCourse(courseId){
+    return Enrollment.deleteMany({ courseId })
+}
+
 module.exports = {
     createEnrollment,
     findByStudentAndCourse,
@@ -46,5 +50,6 @@ module.exports = {
     countByStudent,
     updateStatus,
     countByCourse,
-    countAll
+    countAll,
+    deleteByCourse
 }

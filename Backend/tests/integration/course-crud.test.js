@@ -1,0 +1,143 @@
+const request = require('supertest')
+const app = require('../../src/app')
+const { createUser } = require('../helpers/factory')
+const { buildPublishedCourse, createCategory, enroll } = require('../helpers/scaffold')
+const Course = require('../../src/modules/courses/courses.model')
+const Section = require('../../src/modules/sections/sections.model')
+const Lesson = require('../../src/modules/lessons/lessons.model')
+const Quiz = require('../../src/modules/quizzes/quizzes.model')
+const Question = require('../../src/modules/questions/questions.model')
+const Enrollment = require('../../src/modules/enrollments/enrollments.model')
+const Review = require('../../src/modules/reviews/reviews.model')
+
+describe('Course create — thumbnail & price', () => {
+    test('rejects course creation without a thumbnailUrl', async () => {
+        const categoryId = await createCategory()
+        const instructor = await createUser('instructor')
+        const res = await request(app)
+            .post('/api/v1/courses')
+            .set('Authorization', instructor.authHeader)
+            .send({ title: 'No Thumb', description: 'Missing a thumbnail url', categoryId })
+        expect(res.status).toBe(400)
+        expect(res.body.message).toMatch(/thumbnailUrl/i)
+    })
+
+    test('rejects a non-URL thumbnailUrl', async () => {
+        const categoryId = await createCategory()
+        const instructor = await createUser('instructor')
+        const res = await request(app)
+            .post('/api/v1/courses')
+            .set('Authorization', instructor.authHeader)
+            .send({ title: 'Bad Thumb', description: 'Invalid thumbnail value', categoryId, thumbnailUrl: 'not-a-url' })
+        expect(res.status).toBe(400)
+    })
+
+    test('defaults price to 5000 when omitted', async () => {
+        const categoryId = await createCategory()
+        const instructor = await createUser('instructor')
+        const res = await request(app)
+            .post('/api/v1/courses')
+            .set('Authorization', instructor.authHeader)
+            .send({ title: 'Priced Course', description: 'Should default to 5000', categoryId, thumbnailUrl: 'https://cdn.colearn.test/t.jpg' })
+        expect(res.status).toBe(201)
+        expect(res.body.data.price).toBe(5000)
+    })
+
+    test('accepts an explicit price', async () => {
+        const categoryId = await createCategory()
+        const instructor = await createUser('instructor')
+        const res = await request(app)
+            .post('/api/v1/courses')
+            .set('Authorization', instructor.authHeader)
+            .send({ title: 'Custom Price', description: 'Explicit price value', categoryId, thumbnailUrl: 'https://cdn.colearn.test/t.jpg', price: 999 })
+        expect(res.status).toBe(201)
+        expect(res.body.data.price).toBe(999)
+    })
+})
+
+describe('PUT /api/v1/courses/:id (update)', () => {
+    test('owner instructor can update title, price and thumbnail', async () => {
+        const course = await buildPublishedCourse()
+        const res = await request(app)
+            .put(`/api/v1/courses/${course.courseId}`)
+            .set('Authorization', course.instructor.authHeader)
+            .send({ title: 'Updated Title', price: 1234, thumbnailUrl: 'https://cdn.colearn.test/new.jpg' })
+        expect(res.status).toBe(200)
+        expect(res.body.data.title).toBe('Updated Title')
+        expect(res.body.data.price).toBe(1234)
+    })
+
+    test('a non-owner instructor cannot update', async () => {
+        const course = await buildPublishedCourse()
+        const other = await createUser('instructor')
+        const res = await request(app)
+            .put(`/api/v1/courses/${course.courseId}`)
+            .set('Authorization', other.authHeader)
+            .send({ title: 'Hijack' })
+        expect(res.status).toBe(403)
+    })
+
+    test('an admin can update any course', async () => {
+        const course = await buildPublishedCourse()
+        const admin = await createUser('admin')
+        const res = await request(app)
+            .put(`/api/v1/courses/${course.courseId}`)
+            .set('Authorization', admin.authHeader)
+            .send({ description: 'Edited by admin now' })
+        expect(res.status).toBe(200)
+    })
+
+    test('rejects an empty update body', async () => {
+        const course = await buildPublishedCourse()
+        const res = await request(app)
+            .put(`/api/v1/courses/${course.courseId}`)
+            .set('Authorization', course.instructor.authHeader)
+            .send({})
+        expect(res.status).toBe(400)
+    })
+
+    test('a student cannot update a course', async () => {
+        const course = await buildPublishedCourse()
+        const student = await createUser('student')
+        const res = await request(app)
+            .put(`/api/v1/courses/${course.courseId}`)
+            .set('Authorization', student.authHeader)
+            .send({ title: 'Nope' })
+        expect(res.status).toBe(403)
+    })
+})
+
+describe('DELETE /api/v1/courses/:id (cascade)', () => {
+    test('owner deletion cascades to sections, lessons, quizzes, questions, enrollments and reviews', async () => {
+        const course = await buildPublishedCourse()
+        const student = await createUser('student')
+        await enroll(course.courseId, student)
+        await request(app)
+            .post(`/api/v1/courses/${course.courseId}/reviews`)
+            .set('Authorization', student.authHeader)
+            .send({ rating: 5 })
+
+        const res = await request(app)
+            .delete(`/api/v1/courses/${course.courseId}`)
+            .set('Authorization', course.instructor.authHeader)
+        expect(res.status).toBe(200)
+
+        expect(await Course.countDocuments({ _id: course.courseId })).toBe(0)
+        expect(await Section.countDocuments({ courseId: course.courseId })).toBe(0)
+        expect(await Lesson.countDocuments({ _id: course.lessonId })).toBe(0)
+        expect(await Quiz.countDocuments({ _id: course.quizId })).toBe(0)
+        expect(await Question.countDocuments({ quizId: course.quizId })).toBe(0)
+        expect(await Enrollment.countDocuments({ courseId: course.courseId })).toBe(0)
+        expect(await Review.countDocuments({ courseId: course.courseId })).toBe(0)
+    })
+
+    test('a non-owner instructor cannot delete', async () => {
+        const course = await buildPublishedCourse()
+        const other = await createUser('instructor')
+        const res = await request(app)
+            .delete(`/api/v1/courses/${course.courseId}`)
+            .set('Authorization', other.authHeader)
+        expect(res.status).toBe(403)
+        expect(await Course.countDocuments({ _id: course.courseId })).toBe(1)
+    })
+})

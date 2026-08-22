@@ -1,13 +1,24 @@
+# Dependencies
 node_modules/
 
-logs/
-
+# Environment / secrets
 .env
+.env.local
+.env.*.local
 
-Context.md
+# Logs
+logs/
+*.log
+npm-debug.log*
 
-Copied.txt
+# Test coverage
+coverage/
 
-ROUTES.txt
-
+# OS / editor / tooling
 .DS_Store
+.claude
+
+# Internal, kept local (not part of the published deliverable)
+Context.md
+Copied.txt
+ROUTES.txt

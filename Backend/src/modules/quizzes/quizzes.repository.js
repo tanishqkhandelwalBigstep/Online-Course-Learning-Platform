@@ -20,10 +20,15 @@ function deleteById(id){
     return Quiz.findByIdAndDelete(id)
 }
 
+function deleteByLessonIds(lessonIds){
+    return Quiz.deleteMany({ lessonId: { $in: lessonIds } })
+}
+
 module.exports = {
     createQuiz,
     findByLesson,
     findByLessonIds,
     findById,
-    deleteById
+    deleteById,
+    deleteByLessonIds
 }

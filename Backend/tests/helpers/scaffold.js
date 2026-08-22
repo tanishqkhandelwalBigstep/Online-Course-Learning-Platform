@@ -39,7 +39,9 @@ async function buildPublishedCourse(overrides = {}){
         .send({
             title: overrides.title || 'Full Journey Course',
             description: overrides.description || 'A complete course',
-            categoryId
+            categoryId,
+            thumbnailUrl: overrides.thumbnailUrl || 'https://cdn.colearn.test/thumb.jpg',
+            ...(overrides.price !== undefined ? { price: overrides.price } : {})
         })
     const courseId = courseRes.body.data._id
 
