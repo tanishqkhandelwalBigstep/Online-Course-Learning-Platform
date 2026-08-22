@@ -77,10 +77,14 @@ async function computeProgress(studentId, courseId){
     }
 }
 
-async function getCourseProgress(studentId, courseId){
+async function getCourseProgress(requester, studentId, courseId){
     const course = await coursesRepository.findById(courseId)
     if (!course){
         throw new NotFoundError('Course not found')
+    }
+
+    if (requester.role === 'instructor' && course.instructorId.toString() !== requester.id){
+        throw new ForbiddenError('You can only view progress for your own course')
     }
 
     const progress = await computeProgress(studentId, courseId)

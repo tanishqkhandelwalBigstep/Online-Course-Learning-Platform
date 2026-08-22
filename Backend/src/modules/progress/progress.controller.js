@@ -19,7 +19,7 @@ const getCourseProgress = asyncHandler(async (req, res) => {
         }
     }
 
-    const progress = await progressService.getCourseProgress(studentId, req.params.id)
+    const progress = await progressService.getCourseProgress(req.user, studentId, req.params.id)
     return sendSuccess(res, 200, 'Course progress fetched successfully', progress)
 })
 

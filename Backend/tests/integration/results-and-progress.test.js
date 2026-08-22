@@ -84,6 +84,19 @@ describe('Course progress viewing', () => {
         expect(res.status).toBe(400)
     })
 
+    test('an instructor cannot view progress for another instructor\'s course', async () => {
+        const course = await buildPublishedCourse()
+        const student = await createUser('student')
+        await enroll(course.courseId, student)
+        const other = await createUser('instructor')
+
+        const res = await request(app)
+            .get(`/api/v1/courses/${course.courseId}/progress?studentId=${student.id}`)
+            .set('Authorization', other.authHeader)
+
+        expect(res.status).toBe(403)
+    })
+
     test('a student sees their own progress without needing a query param', async () => {
         const course = await buildPublishedCourse()
         const student = await createUser('student')
